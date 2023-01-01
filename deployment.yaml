@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: pokemon-main
+  labels:
+    app: pokemon-main
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: pokemon-main
+  template:
+    metadata:
+      labels:
+        app: pokemon-main
+    spec:
+      containers:
+        - name: pokemon-main
+          image: rbaliyan/pokemon-micro:0.0.2-SNAPSHOT
+          imagePullPolicy: Always
+          env:
+            - name: DATABASE
+              value: db_pokemon
+            - name: MYSQL_HOST
+              value: mysql-pokemon-main
+            - name: REDIS_HOST
+              value: redis
+
+---
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mysql-pokemon-main
+  labels:
+    app: mysql-pokemon-main
+spec:
+  selector:
+    matchLabels:
+      app: mysql-pokemon-main
+  template:
+    metadata:
+      labels:
+        app: mysql-pokemon-main
+    spec:
+      containers:
+        - name: mysql-pokemon-main
+          image: mysql:5.7
+          env:
+            - name: MYSQL_DATABASE
+              value: "db_pokemon"
+            - name: MYSQL_USER
+              value: "user"
+            - name: MYSQL_PASSWORD
+              value: "password"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "password"
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: my-sql-pokemon-main
+      volumes:
+        - name: my-sql-pokemon-main
