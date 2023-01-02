@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: pokemon-main
-          image: rbaliyan/pokemon-micro:0.0.2-SNAPSHOT
+          image: rbaliyan/pokemon-micro:1.0.3-SNAPSHOT
           imagePullPolicy: Always
           env:
             - name: DATABASE
@@ -25,6 +25,8 @@ spec:
               value: mysql-pokemon-main
             - name: REDIS_HOST
               value: redis
+            - name: ABILITY_URL
+              value: ability-service
 
 ---
 
@@ -60,3 +62,72 @@ spec:
               name: my-sql-pokemon-main
       volumes:
         - name: my-sql-pokemon-main
+
+---
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: ability
+  labels:
+    app: ability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ability
+  template:
+    metadata:
+      labels:
+        app: ability
+    spec:
+      containers:
+        - name: ability
+          image: rbaliyan/abilities:0.0.2-SNAPSHOT
+          imagePullPolicy: Always
+          env:
+            - name: POKEMON_MAIN_URL
+              value: pokemon-main
+            - name: MYSQL_HOST
+              value: mysql-ability
+            - name: DATABASE
+              value: ability
+            - name: REDIS_HOST
+              value: redis
+
+---
+
+apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: mysql-ability
+  labels:
+    app: mysql-ability
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-ability
+  template:
+    metadata:
+      labels:
+        app: mysql-ability
+    spec:
+      containers:
+        - name: mysql-service
+          image: mysql:5.7
+          imagePullPolicy: Always
+          env:
+            - name: MYSQL_DATABASE
+              value: "ability"
+            - name: MYSQL_USER
+              value: "user"
+            - name: MYSQL_PASSWORD
+              value: "password"
+            - name: MYSQL_ROOT_PASSWORD
+              value: "password"
+          volumeMounts:
+            - mountPath: /var/lib/mysql
+              name: my-sql-ability
+      volumes:
+        - name: my-sql-ability
